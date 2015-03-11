@@ -70,7 +70,7 @@ void print_banner()
   print_banner_content_line("WARNING: the errors and entry numbers in the");
   print_banner_content_line("resulting YODA histograms are not meaningful");
   print_banner_content_line("");
-  print_banner_content_line("for an automated creation of APPLgrid and");
+  print_banner_content_line("for an automated creation of APPLgrids and");
   print_banner_content_line("fastNLO tables, check out mcgrid.hepforge.org");
   print_banner_frame_line();
   cout << endl;
