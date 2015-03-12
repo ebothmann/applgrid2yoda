@@ -4,11 +4,11 @@ This script convolutes an APPLgrid with an LHAPDF and writes out the resulting h
 ## usage
 
 ```
-./applgrid2yoda <applgrid_file_name> <rivet_id> [[pdf_set_name] subset_start[...subset_end]]
+./applgrid2yoda <applgrid_file_name> <rivet_path> [[pdf_set_name] subset_start[...subset_end]]
 ```
 
 - the `applgrid_file_name` is the path to the ROOT file written out by APPLgrid (required)
-- the `rivet_id` is given by `/analysis/histogram` (required)
+- the `rivet_path` is given by `/analysis/histogram` (required)
 - the `pdf_set_name` is the name of the PDF set passed to LHAPDF (optional, default: "CT10")
 - subsets indizes can be given using `subset_start` and `subset_end` (optional, default: "0", i.e. the CV PDF member)
     - if only `subset_start` is given, then only the PDF member for this index will be used
