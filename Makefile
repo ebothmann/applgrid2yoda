@@ -14,11 +14,7 @@ YODALDFLAGS=$(shell yoda-config --ldflags)
 TSTFLAGS=$(AFLAGS) $(LHAFLAGS) $(YODAFLAGS)
 TSTLDFLAGS=$(ALDFLAGS) $(LHALDFLAGS) $(YODALDFLAGS)
 
-.PHONY:	all test clean
-
-all:	test
-
-test:
+build:
 	g++ -Wall $(TSTFLAGS) $(TSTLDFLAGS) applgrid2yoda.cpp -o applgrid2yoda
 	
 clean:
