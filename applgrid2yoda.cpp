@@ -35,7 +35,7 @@ range range_from_string(string const & range_string) {
 }
 
 void print_usage(string const & program_name) {
-  cout << "usage: " << program_name << " <applgrid_file_name> <rivet_id> [[pdf_set_name] subset_start[...subset_end]]" << endl;
+  cout << "usage: " << program_name << " <applgrid_file_name> <rivet_path> [[pdf_set_name] subset_start[...subset_end]]" << endl;
 }
 
 static const std::string::size_type bannerWidth = 54;
@@ -129,8 +129,8 @@ int main(int argc, char* argv[]) {
   grid_file_path.assign(argv[1]);
 
   // Read Rivet ID
-  string rivet_id;
-  rivet_id.assign(argv[2]);
+  string rivet_path;
+  rivet_path.assign(argv[2]);
 
   // Read PDF set name and subset index
   if (argc > 3) {
@@ -165,7 +165,7 @@ int main(int argc, char* argv[]) {
     vector<double> cross_sections = g.vconvolute(evolvepdf_, alphaspdf_, loops_count);
     ostringstream histogram_file_name;
     histogram_file_name << histogram_file_name_prefix << subset_index << ".yoda";
-    YODA::Histo1D *histogram = new YODA::Histo1D(bins, rivet_id, histogram_file_name.str());
+    YODA::Histo1D *histogram = new YODA::Histo1D(bins, rivet_path, histogram_file_name.str());
     for (size_t bin_index(0); bin_index < bins.size(); bin_index++) {
       histogram->fillBin(bin_index, cross_sections[bin_index] * bins[bin_index].xWidth());
     }
