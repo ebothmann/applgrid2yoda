@@ -14,6 +14,9 @@
 // yoda
 #include <YODA/WriterYODA.h>
 
+// IO colors
+#include "IOColors.hh"
+
 using namespace std;
 
 // declare the LHAPDF functions we will pass to APPLgrid
@@ -41,9 +44,9 @@ void print_usage(string const & program_name) {
 static const std::string::size_type bannerWidth = 54;
 static const char bannerFrameChar = '*';
 
-void print_banner_content_line(const string line)
+void print_banner_content_line(const string line, const string::size_type length)
 {
-  const string::size_type totalMarginSize = bannerWidth - line.size() - 2;
+  const string::size_type totalMarginSize = bannerWidth - length - 2;
   const string::size_type oneSideMarginSize = totalMarginSize / 2;
   const string margin(oneSideMarginSize, ' ');
   cout << bannerFrameChar << margin << line << margin;
@@ -51,6 +54,11 @@ void print_banner_content_line(const string line)
     cout << ' ';
   }
   cout << bannerFrameChar << endl;
+}
+
+void print_banner_content_line(const string line)
+{
+  print_banner_content_line(line, line.size());
 }
 
 void print_banner_frame_line()
@@ -64,10 +72,23 @@ void print_banner()
   cout << endl;
   print_banner_frame_line();
   print_banner_content_line("");
-  print_banner_content_line("applgrid2yoda");
+
+  ostringstream colored_program_name;
+  string program_name("applgrid2yoda");
+  colored_program_name << bold << program_name << clearatt;
+  string colored_program_name_str(colored_program_name.str());
+  print_banner_content_line(colored_program_name_str, program_name.size());
+
   print_banner_content_line("E. Bothmann");
   print_banner_content_line("");
-  print_banner_content_line("WARNING: the errors and entry numbers in the");
+
+  ostringstream colored_warning;
+  string warning_title("Warning");
+  string warning_message(": the errors and entry numbers in the");
+  colored_warning << red << underline << warning_title << clearatt << warning_message;
+  string colored_warning_str(colored_warning.str());
+  print_banner_content_line(colored_warning_str, warning_title.size() + warning_message.size());
+
   print_banner_content_line("resulting YODA histograms are not meaningful");
   print_banner_content_line("");
   print_banner_content_line("for an automated creation of APPLgrids and");
@@ -112,7 +133,8 @@ string basename_without_extension_from_path(string const & path) {
 }
 
 int main(int argc, char* argv[]) {
-
+  print_banner();
+  return 0;
   // Set defaults
   range pdf_subset_range(0, 1);
   string pdf_set_name("CT10");
