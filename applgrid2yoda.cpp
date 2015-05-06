@@ -133,7 +133,6 @@ string basename_without_extension_from_path(string const & path) {
 }
 
 int main(int argc, char* argv[]) {
-  print_banner();
 
   // Set defaults
   range pdf_subset_range(0, 1);
