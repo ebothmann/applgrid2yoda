@@ -15,7 +15,7 @@ TSTFLAGS=$(AFLAGS) $(LHAFLAGS) $(YODAFLAGS)
 TSTLDFLAGS=$(ALDFLAGS) $(LHALDFLAGS) $(YODALDFLAGS)
 
 build:
-	g++ -Wall -gfull $(TSTFLAGS) $(TSTLDFLAGS) applgrid2yoda.cpp -o applgrid2yoda
+	g++ -Wall -g $(TSTFLAGS) $(TSTLDFLAGS) applgrid2yoda.cpp -o applgrid2yoda
 	
 clean:
 	rm -f applgrid2yoda
