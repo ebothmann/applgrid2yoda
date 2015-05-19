@@ -216,10 +216,8 @@ int main(int argc, const char* argv[]) {
   // Read scale factors
   vector<string> scale_factors;
   if (parser.count("scale-factors") == 0) {
-    scale_factors.push_back("0.0");
-  } else if (parser.count("scale-factors") == 1) {
-    scale_factors.push_back(parser.retrieve<string>("scale-factors"));
-  } else if (parser.count("scale-factors") > 1) {
+    scale_factors.push_back("1.0");
+  } else if (parser.count("scale-factors") > 0) {
     scale_factors = parser.retrieve<vector<string> >("scale-factors");
   }
 
