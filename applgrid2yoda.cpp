@@ -17,6 +17,9 @@
 // IO colors
 #include "IOColors.hh"
 
+// Argument parser
+#include "argparse.hpp"
+
 using namespace std;
 
 // declare the LHAPDF functions we will pass to APPLgrid
@@ -37,11 +40,7 @@ range range_from_string(string const & range_string) {
   return ret;
 }
 
-void print_usage(string const & program_name) {
-  cout << "usage: " << program_name << " <applgrid_file_name> <rivet_path> [[pdf_set_name] subset_start[...subset_end]]" << endl;
-}
-
-static const std::string::size_type bannerWidth = 54;
+static const string::size_type bannerWidth = 54;
 static const char bannerFrameChar = '*';
 
 void print_banner_content_line(const string line, const string::size_type length)
@@ -110,6 +109,22 @@ void print_pdf_feedback(string const & pdf_set_name, range const & pdf_subset_ra
   cout << " of " << pdf_set_name << endl;
 }
 
+void print_scale_feedback(vector<string> const & scale_factors) {
+  cout << "Will use ";
+  if (scale_factors.size() == 1) {
+    cout << "scale factor ";
+  } else {
+    cout << "scale factors ";
+  }
+  for(vector<string>::const_iterator it = scale_factors.begin(); it != scale_factors.end(); ++it) {
+    cout << *it;
+    if (it+1 != scale_factors.end()) {
+      cout << ", ";
+    }
+  }
+  cout << endl;
+}
+
 vector<YODA::HistoBin1D> bins_from_grid(appl::grid const & g)
 {
   vector<YODA::HistoBin1D> bins;
@@ -132,38 +147,83 @@ string basename_without_extension_from_path(string const & path) {
   return file_name.substr(0, delimiter_pos);
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, const char* argv[]) {
 
   // Set defaults
-  range pdf_subset_range(0, 1);
-  string pdf_set_name("CT10");
-
-  if (argc < 3) {
-    print_usage(argv[0]);
-    exit(-1);
-  }
+  range pdf_subset_range_default(0, 1);
+  string pdf_set_name_default("CT10");
 
   print_banner();
 
-  // Read grid name
-  string grid_file_path;
-  grid_file_path.assign(argv[1]);
+  ArgumentParser parser;
+  parser.addArgument("-i", "--rivet-id", 1);
+  parser.addArgument("-p", "--pdf-set", 1);
+  parser.addArgument("-m", "--pdf-members", 1);
+  parser.addArgument("-s", "--scale-factors", '+');
+  parser.addFinalArgument("grid");
 
-  // Read Rivet ID
-  string rivet_path;
-  rivet_path.assign(argv[2]);
+  parser.parse(argc, argv);
+
+  // Read grid file path
+  string grid_file_path = parser.retrieve<string>("grid");
+  if (grid_file_path == "") {
+    cout << parser.usage();
+    exit(-1);
+  }
+
+  // Read or construct Rivet ID
+  string rivet_id = parser.retrieve<string>("rivet-id");
+  if (rivet_id == "") {
+    cout << "Rivet ID not given explicitly. Try to parse from grid path ...  ";
+    // "[...]/ANALYSIS/HISTO.root" -> "/ANALYSIS/HISTO"
+    string::size_type dot_index = grid_file_path.find_last_of(".");
+    if (dot_index != string::npos) {
+      string base_path = grid_file_path.substr(0, dot_index);
+      string::size_type slash_index = base_path.find_last_of("/");
+      if (slash_index != string::npos) {
+        string::size_type second_slash_index = base_path.find_last_of("/", slash_index - 1);
+        if (second_slash_index == string::npos) {
+          rivet_id = "/" + base_path;
+        } else {
+          rivet_id = base_path.substr(second_slash_index);
+        }
+      }
+    }
+    if (rivet_id == "") {
+      cout << "not found" << endl;
+      cerr << "Please provide a Rivet ID using the `--rivet-id' option." << endl;
+      exit(-1);
+    } else {
+      cout << rivet_id << endl;
+    }
+  }
 
   // Read PDF set name and subset index
-  if (argc > 3) {
-    pdf_set_name.assign(argv[3]);
+  string pdf_set_name = parser.retrieve<string>("pdf-set");
+  if (pdf_set_name == "") {
+    pdf_set_name = pdf_set_name_default;
   }
-  if (argc > 4) {
-    string pdf_subset_arg;
-    pdf_subset_arg.assign(argv[4]);
-    pdf_subset_range = range_from_string(pdf_subset_arg);
+  range pdf_subset_range;
+  string pdf_members = parser.retrieve<string>("pdf-members");
+  if (pdf_members == "") {
+    pdf_subset_range = pdf_subset_range_default;
+  } else {
+    pdf_subset_range = range_from_string(pdf_members);
   }
 
   print_pdf_feedback(pdf_set_name, pdf_subset_range);
+
+  // Read scale factors
+  vector<string> scale_factors;
+  if (parser.count("scale-factors") == 0) {
+    scale_factors.push_back("0.0");
+  } else if (parser.count("scale-factors") == 1) {
+    scale_factors.push_back(parser.retrieve<string>("scale-factors"));
+  } else if (parser.count("scale-factors") > 1) {
+    scale_factors = parser.retrieve<vector<string> >("scale-factors");
+  }
+
+  print_scale_feedback(scale_factors);
 
   // Read grid
   appl::grid g(grid_file_path);
@@ -181,18 +241,24 @@ int main(int argc, char* argv[]) {
        subset_index < pdf_subset_range.first + pdf_subset_range.second;
        subset_index++)
   {
-    LHAPDF::initPDFSet(pdf_set_name, LHAPDF::LHGRID, subset_index);
-    g.convolute(evolvepdf_, alphaspdf_, loops_count);
-    vector<double> cross_sections = g.vconvolute(evolvepdf_, alphaspdf_, loops_count);
-    ostringstream histogram_file_name;
-    histogram_file_name << histogram_file_name_prefix << subset_index << ".yoda";
-    YODA::Histo1D *histogram = new YODA::Histo1D(bins, rivet_path, histogram_file_name.str());
-    for (size_t bin_index(0); bin_index < bins.size(); bin_index++) {
-      histogram->fillBin(bin_index, cross_sections[bin_index] * bins[bin_index].xWidth());
+    for(vector<string>::const_iterator scale_factor_it = scale_factors.begin();
+        scale_factor_it != scale_factors.end();
+        ++scale_factor_it)
+    {
+        const double scale_factor = (const double)(atof((*scale_factor_it).c_str()));
+        LHAPDF::initPDFSet(pdf_set_name, LHAPDF::LHGRID, subset_index);
+        g.convolute(evolvepdf_, alphaspdf_, loops_count);
+        vector<double> cross_sections = g.vconvolute(evolvepdf_, alphaspdf_, loops_count, scale_factor, scale_factor);
+        ostringstream histogram_file_name;
+        histogram_file_name << histogram_file_name_prefix << subset_index << '_' << *scale_factor_it << ".yoda";
+        YODA::Histo1D *histogram = new YODA::Histo1D(bins, rivet_id, histogram_file_name.str());
+        for (size_t bin_index(0); bin_index < bins.size(); bin_index++) {
+          histogram->fillBin(bin_index, cross_sections[bin_index] * bins[bin_index].xWidth());
+        }
+        vector<YODA::AnalysisObject *> analysis_objects(1, histogram);
+        writer.write(histogram_file_name.str(), analysis_objects);
+        delete histogram;
     }
-    std::vector<YODA::AnalysisObject *> analysis_objects(1, histogram);
-    writer.write(histogram_file_name.str(), analysis_objects);
-    delete histogram;
   }
 }
 
