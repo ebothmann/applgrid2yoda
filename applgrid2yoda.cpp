@@ -239,14 +239,15 @@ int main(int argc, const char* argv[]) {
        subset_index < pdf_subset_range.first + pdf_subset_range.second;
        subset_index++)
   {
+    LHAPDF::initPDFSet(pdf_set_name, LHAPDF::LHGRID, subset_index);
+    g.convolute(evolvepdf_, alphaspdf_, loops_count);
     for(vector<string>::const_iterator scale_factor_it = scale_factors.begin();
         scale_factor_it != scale_factors.end();
         ++scale_factor_it)
     {
-        const double scale_factor = sqrt((const double)(atof((*scale_factor_it).c_str())));
-        LHAPDF::initPDFSet(pdf_set_name, LHAPDF::LHGRID, subset_index);
-        g.convolute(evolvepdf_, alphaspdf_, loops_count);
+        const double scale_factor = (const double)(atof((*scale_factor_it).c_str()));
         vector<double> cross_sections = g.vconvolute(evolvepdf_, alphaspdf_, loops_count, scale_factor, scale_factor);
+
         ostringstream histogram_file_name;
         histogram_file_name << histogram_file_name_prefix << subset_index << '_' << *scale_factor_it << ".yoda";
         YODA::Histo1D *histogram = new YODA::Histo1D(bins, rivet_id, histogram_file_name.str());
