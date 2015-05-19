@@ -243,7 +243,7 @@ int main(int argc, const char* argv[]) {
         scale_factor_it != scale_factors.end();
         ++scale_factor_it)
     {
-        const double scale_factor = (const double)(atof((*scale_factor_it).c_str()));
+        const double scale_factor = sqrt((const double)(atof((*scale_factor_it).c_str())));
         LHAPDF::initPDFSet(pdf_set_name, LHAPDF::LHGRID, subset_index);
         g.convolute(evolvepdf_, alphaspdf_, loops_count);
         vector<double> cross_sections = g.vconvolute(evolvepdf_, alphaspdf_, loops_count, scale_factor, scale_factor);
