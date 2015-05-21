@@ -4,21 +4,25 @@ This script convolutes an APPLgrid with an LHAPDF and writes out the resulting h
 ## usage
 
 ```
-./applgrid2yoda <applgrid_file_name> <rivet_path> [[pdf_set_name] subset_start[...subset_end]]
+./applgrid2yoda [--rivet-id RIVET-ID] \
+        [--pdf-set PDF-SET] [--pdf-members PDF-MEMBERS] \
+        [--scale-factors SCALE-FACTORS [SCALE-FACTORS...]] GRID
 ```
 
-- the `applgrid_file_name` is the path to the ROOT file written out by APPLgrid (required)
-- the `rivet_path` is given by `/analysis/histogram` (required)
-- the `pdf_set_name` is the name of the PDF set passed to LHAPDF (optional, default: "CT10")
-- subsets indizes can be given using `subset_start` and `subset_end` (optional, default: "0", i.e. the CV PDF member)
-    - if only `subset_start` is given, then only the PDF member for this index will be used
-    - if both indizes are given (e.g. "0...52"), they are interpreted as a range including the endpoints
+- `GRID` is the path to the ROOT file written out by APPLgrid (required)
+- the `RIVET-ID` is given by `/analysis/histogram`, if it is not given, the script will try to construct the Rivet ID from the last two components of the `GRID` path
+- the `PDF-SET` is the name of the PDF set passed to LHAPDF (optional, default: "CT10")
+- `PDF-MEMBERS` can be given as a single number or a range (optional, default: "0", i.e. the CV PDF member)
+    - if a single number (e.g. "7") is given, then only the PDF member for this index will be used
+    - if two numbers connected with three dots are given (e.g. "0...52"), they are interpreted as a range including the endpoints
     
 ## example
 
 ```
-./applgrid2yoda mcgrid/MCgrid_CDF_2009_S8383952/d02-x01-y01.root /MCgrid_CDF_2009_S8383952/d02-x01-y01 CT10 0...52
+./applgrid2yoda --pdf-set CT10 --pdf-members 0...52 \
+        mcgrid/MCgrid_CDF_2009_S8383952/d02-x01-y01.root
 ```
 
 This will convolute the APPLgrid `d02-x01-y01.root` with all CT10 members, writing out one YODA file per member.
 This could be used to generate a PDF error band for the observable.
+Note that the last two components of the path here give the Rivet ID, so it is not necessary to specify it explicitly.
