@@ -6,7 +6,7 @@ This script convolutes an APPLgrid with an LHAPDF and writes out the resulting h
 ```
 ./applgrid2yoda [--rivet-id RIVET-ID] \
         [--pdf-set PDF-SET] [--pdf-members PDF-MEMBERS] \
-        [--scale-factors SCALE-FACTORS [SCALE-FACTORS...]] GRID
+        [--scale-factors REN-SCALE-FACTOR,FAC-SCALE-FACTOR [SCALE-FACTORS...]] GRID
 ```
 
 - `GRID` is the path to the ROOT file written out by APPLgrid (required)
@@ -15,6 +15,10 @@ This script convolutes an APPLgrid with an LHAPDF and writes out the resulting h
 - `PDF-MEMBERS` can be given as a single number or a range (optional, default: "0", i.e. the CV PDF member)
     - if a single number (e.g. "7") is given, then only the PDF member for this index will be used
     - if two numbers connected with three dots are given (e.g. "0...52"), they are interpreted as a range including the endpoints
+- `REN-SCALE-FACTOR` the (unsquared) renormalisation scale factor
+- `FAC-SCALE-FACTOR` the (unsquared) factorisation scale factor
+- the scale factors are separated by a comma, additional scale pairs are separates by spaces
+- identical scale factors in a pair can be given as a single value (e.g. "2.0" instead of "2.0,2.0")
     
 ## example
 
