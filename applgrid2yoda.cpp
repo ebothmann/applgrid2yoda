@@ -109,16 +109,11 @@ void print_pdf_feedback(string const & pdf_set_name, range const & pdf_subset_ra
   cout << " of " << pdf_set_name << endl;
 }
 
-void print_scale_feedback(vector<string> const & scale_factors) {
-  cout << "Will use ";
-  if (scale_factors.size() == 1) {
-    cout << "scale factor ";
-  } else {
-    cout << "scale factors ";
-  }
-  for(vector<string>::const_iterator it = scale_factors.begin(); it != scale_factors.end(); ++it) {
-    cout << *it;
-    if (it+1 != scale_factors.end()) {
+void print_scale_feedback(vector<pair<string, string> > const & scale_factor_pairs) {
+  cout << "Will use scale factors ";
+  for(vector<pair<string, string> >::const_iterator it = scale_factor_pairs.begin(); it != scale_factor_pairs.end(); ++it) {
+    cout << "(" << it->first << ", " << it->second << ")";
+    if (it + 1 != scale_factor_pairs.end()) {
       cout << ", ";
     }
   }
@@ -214,14 +209,24 @@ int main(int argc, const char* argv[]) {
   print_pdf_feedback(pdf_set_name, pdf_subset_range);
 
   // Read scale factors
-  vector<string> scale_factors;
+  vector<pair<string, string> > scale_factors_pairs;
   if (parser.count("scale-factors") == 0) {
-    scale_factors.push_back("1.0");
+    scale_factors_pairs.push_back(make_pair("1.0", "1.0"));
   } else if (parser.count("scale-factors") > 0) {
-    scale_factors = parser.retrieve<vector<string> >("scale-factors");
+    vector<string> scale_factors = parser.retrieve<vector<string> >("scale-factors");
+    for (vector<string>::const_iterator it = scale_factors.begin(); it != scale_factors.end(); ++it) {
+      size_t pos = it->find(",");
+      if (pos != string::npos) {
+        string first(it->substr(0, pos));
+        string second(it->substr(pos + 1));
+        scale_factors_pairs.push_back(make_pair(first, second));
+      } else {
+        scale_factors_pairs.push_back(make_pair(*it, *it));
+      }
+    }
   }
 
-  print_scale_feedback(scale_factors);
+  print_scale_feedback(scale_factors_pairs);
 
   // Read grid
   appl::grid g(grid_file_path);
@@ -241,15 +246,16 @@ int main(int argc, const char* argv[]) {
   {
     LHAPDF::initPDFSet(pdf_set_name, LHAPDF::LHGRID, subset_index);
     g.convolute(evolvepdf_, alphaspdf_, loops_count);
-    for(vector<string>::const_iterator scale_factor_it = scale_factors.begin();
-        scale_factor_it != scale_factors.end();
-        ++scale_factor_it)
+    for(vector<pair<string, string> >::const_iterator scale_factor_pair_it = scale_factors_pairs.begin();
+        scale_factor_pair_it != scale_factors_pairs.end();
+        ++scale_factor_pair_it)
     {
-        const double scale_factor = (const double)(atof((*scale_factor_it).c_str()));
-        vector<double> cross_sections = g.vconvolute(evolvepdf_, alphaspdf_, loops_count, scale_factor, scale_factor);
+        const double ren_scale_factor = (const double)(atof((scale_factor_pair_it->first).c_str()));
+        const double fac_scale_factor = (const double)(atof((scale_factor_pair_it->second).c_str()));
+        vector<double> cross_sections = g.vconvolute(evolvepdf_, alphaspdf_, loops_count, ren_scale_factor, fac_scale_factor);
 
         ostringstream histogram_file_name;
-        histogram_file_name << histogram_file_name_prefix << subset_index << '_' << *scale_factor_it << ".yoda";
+        histogram_file_name << histogram_file_name_prefix << subset_index << '_' << scale_factor_pair_it->first << '_' << scale_factor_pair_it->second << ".yoda";
         YODA::Histo1D *histogram = new YODA::Histo1D(bins, rivet_id, histogram_file_name.str());
         for (size_t bin_index(0); bin_index < bins.size(); bin_index++) {
           histogram->fillBin(bin_index, cross_sections[bin_index] * bins[bin_index].xWidth());
