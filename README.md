@@ -1,3 +1,5 @@
+*NOTE: This repository has been moved to https://gitlab.com/mcgrid/applgrid2yoda.*
+
 # applgrid2yoda
 This script convolutes an APPLgrid with an LHAPDF and writes out the resulting histograms as YODA files.
 
